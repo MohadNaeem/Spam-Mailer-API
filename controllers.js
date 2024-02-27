@@ -1,5 +1,3 @@
-const nodemailer = require("nodemailer");
-const CONSTANTS = require("./constants");
 const { google } = require("googleapis");
 require("dotenv").config();
 
