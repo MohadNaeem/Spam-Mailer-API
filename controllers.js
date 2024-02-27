@@ -1,8 +1,19 @@
-const { generateConfig } = require("./utils");
 const nodemailer = require("nodemailer");
 const CONSTANTS = require("./constants");
 const { google } = require("googleapis");
 require("dotenv").config();
+
+const generateConfig=(url,accessToken)=>{
+  return {
+      method: "get",
+      url: url,
+      headers: {
+        Authorization: `Bearer ${accessToken} `,
+        "Content-type": "application/json"
+      },
+    };
+}
+
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
