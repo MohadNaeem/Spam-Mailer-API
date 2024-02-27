@@ -1,10 +1,9 @@
-const axios = require("axios");
+import axios from "axios/dist/node/axios.cjs";
 const { generateConfig } = require("./utils");
 const nodemailer = require("nodemailer");
 const CONSTANTS = require("./constants");
 const { google } = require("googleapis");
 require("dotenv").config();
-
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
