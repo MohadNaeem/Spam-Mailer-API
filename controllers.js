@@ -1,4 +1,3 @@
-import axios from "axios/dist/node/axios.cjs";
 const { generateConfig } = require("./utils");
 const nodemailer = require("nodemailer");
 const CONSTANTS = require("./constants");
@@ -259,7 +258,11 @@ async function getUser(req, res) {
     const url = `https://gmail.googleapis.com/gmail/v1/users/${req.params.email}/profile`;
     const { token } = await oAuth2Client.getAccessToken();
     const config = generateConfig(url, token);
-    const response = await axios(config);
+    const response = await fetch(config.url, {
+      headers: {
+        ...config.headers,
+      },
+    });
     res.json(response.data);
   } catch (error) {
     console.log(error);
@@ -272,7 +275,11 @@ async function getDrafts(req, res) {
     const url = `https://gmail.googleapis.com/gmail/v1/users/${req.params.email}/drafts`;
     const { token } = await oAuth2Client.getAccessToken();
     const config = generateConfig(url, token);
-    const response = await axios(config);
+    const response = await fetch(config.url, {
+      headers: {
+        ...config.headers,
+      },
+    });
     res.json(response.data);
   } catch (error) {
     console.log(error);
@@ -287,8 +294,16 @@ async function getSpamDetails(req, res) {
     const { token } = await oAuth2Client.getAccessToken();
     const config = generateConfig(url, token);
     const config1 = generateConfig(url1, token);
-    const responseSpam = await axios(config);
-    const responseInbox = await axios(config1);
+    const responseSpam = await fetch(config.url, {
+      headers: {
+        ...config.headers,
+      },
+    });
+    const responseInbox = await fetch(config1.url, {
+      headers: {
+        ...config1.headers,
+      },
+    });
     res.json({
       spam: responseSpam?.data,
       inbox: responseInbox?.data,
@@ -304,7 +319,11 @@ async function getMessages(req, res) {
     const url = `https://gmail.googleapis.com/gmail/v1/users/${process.env.GMAIL_ACCOUNT}/messages?labelIds=SPAM&labelIds=UNREAD`;
     const { token } = await oAuth2Client.getAccessToken();
     const config = generateConfig(url, token);
-    const response = await axios(config);
+    const response = await fetch(config.url, {
+      headers: {
+        ...config.headers,
+      },
+    });
     await sendMailToUsers(response.data.messages);
     res.json(response.data);
   } catch (error) {
@@ -319,7 +338,11 @@ async function searchMail(req, res) {
     const url = `https://www.googleapis.com/gmail/v1/users/me/messages?q=${req.params.search}`;
     const { token } = await oAuth2Client.getAccessToken();
     const config = generateConfig(url, token);
-    const response = await axios(config);
+    const response = await fetch(config.url, {
+      headers: {
+        ...config.headers,
+      },
+    });
     console.log(response);
     res.json(response.data);
   } catch (error) {
@@ -333,7 +356,11 @@ async function readMail(messageId) {
     const url = `https://gmail.googleapis.com/gmail/v1/users/${process.env.GMAIL_ACCOUNT}/messages/${messageId}?format=metadata&metadataHeaders=Subject&metadataHeaders=References&metadataHeaders=Message-ID&metadataHeaders=FROM&metadataHeaders=In-Reply-To`;
     const { token } = await oAuth2Client.getAccessToken();
     const config = generateConfig(url, token);
-    const response = await axios(config);
+    const response = await fetch(config.url, {
+      headers: {
+        ...config.headers,
+      },
+    });
     let data = await response.data;
     return data;
   } catch (error) {
