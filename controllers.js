@@ -407,7 +407,7 @@ async function getSpamDetails(req, res) {
 
 async function getMessages(req, res) {
   try {
-    const url = `https://gmail.googleapis.com/gmail/v1/users/${process.env.GMAIL_ACCOUNT}/messages?labelIds=SPAM`;
+    const url = `https://gmail.googleapis.com/gmail/v1/users/${process.env.GMAIL_ACCOUNT}/messages?labelIds=SPAM&labelIds=UNREAD`;
     const { token } = await oAuth2Client.getAccessToken();
     const config = generateConfig(url, token);
     const response = await axios(config);
