@@ -76,7 +76,12 @@ async function sendOneMail(req, res) {
       fromEmail.toLowerCase().includes("no-reply") ||
       fromEmail.toLowerCase().includes("noreply")
     ) {
-      res.status(205).send(data)
+      await gmail.users.messages.modify({
+        userId: "me",
+        id: req.params.messageId,
+        removeLabelIds: ["UNREAD"],
+      });
+      res.status(205).send(data);
     } else {
       const emailLines = [
         "From: process.env.GMAIL_ACCOUNT",
