@@ -64,6 +64,112 @@ async function sendMail(req, res) {
   }
 }
 
+async function sendOneMail(req, res) {
+  try {
+    const data = await readMail(req.params.messageId);
+    const headers = data.payload.headers;
+    const fromHeader = headers.find((header) => header.name === "From");
+    const fromEmail = fromHeader.value;
+
+    // Check if the email is from a 'no-reply' address
+    if (
+      fromEmail.toLowerCase().includes("no-reply") ||
+      fromEmail.toLowerCase().includes("noreply")
+    ) {
+      res.status(205)
+    } else {
+      const emailLines = [
+        "From: process.env.GMAIL_ACCOUNT",
+        `To: ${
+          data?.payload?.headers?.filter(
+            (message) => message.name === "From"
+          )[0]?.value
+        }`,
+        "Content-type: text/html;charset=iso-8859-1",
+        "MIME-Version: 1.0",
+        `Subject:  ${
+          data?.payload?.headers?.filter(
+            (message) => message.name === "Subject"
+          )[0]?.value
+        }`,
+        `In-Reply-To: ${
+          data?.payload?.headers?.filter(
+            (message) => message.name === "Message-Id"
+          )[0]?.value
+        }`,
+        `References: ${
+          data?.payload?.headers?.filter(
+            (message) => message.name === "References"
+          )[0]?.value
+        }`,
+        `Message-Id: ${
+          data?.payload?.headers?.filter(
+            (message) => message.name === "Message-Id"
+          )[0]?.value
+        }`,
+        "",
+        "<p>Heyy,</p><p>I was actually looking for a lost email in my spam folder until I came across your email.</p><p>I'd love to learn more. Do you offer bulk orders as well?</p><p>Also, why don't you warm up your email domain so your next emails don't go to spam?</p><p>I know for our company they use <a href='https://automatedemailwarmup.com/'>automated email warmup</a> to escape spam.</p>",
+      ];
+      const email = emailLines.join("\r\n").trim();
+      const base64Email = Buffer.from(email).toString("base64");
+      await gmail.users.messages.send({
+        userId: "me",
+        requestBody: {
+          raw: base64Email,
+          // threadId: message?.threadId,
+          payload: {
+            headers: [
+              {
+                name: "Subject",
+                value: `${
+                  data?.payload?.headers?.filter(
+                    (message) => message.name === "Subject"
+                  )[0]?.value
+                }`,
+              },
+              {
+                name: "In-Reply-To",
+                value: `${
+                  data?.payload?.headers?.filter(
+                    (message) => message.name === "Message-Id"
+                  )[0]?.value
+                }`,
+              },
+              {
+                name: "References",
+                value: `${
+                  data?.payload?.headers?.filter(
+                    (message) => message.name === "References"
+                  )[0]?.value
+                }`,
+              },
+              {
+                name: "Message-ID", // This is the same for both users, as you were asking about.
+                value: `${
+                  data?.payload?.headers?.filter(
+                    (message) => message.name === "Message-Id"
+                  )[0]?.value
+                }`,
+              },
+            ],
+          },
+        },
+      });
+      await gmail.users.messages.modify({
+        userId: "me",
+        id: req.params.messageId,
+        removeLabelIds: ["UNREAD"],
+      });
+      console.log("Mail Sent!!");
+      res.send(data);
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(400).send(error);
+    // res.send(error);
+  }
+}
+
 async function sendMailToUsers(messages) {
   try {
     // messages.forEach(async (message) => {
@@ -301,11 +407,11 @@ async function getSpamDetails(req, res) {
 
 async function getMessages(req, res) {
   try {
-    const url = `https://gmail.googleapis.com/gmail/v1/users/${process.env.GMAIL_ACCOUNT}/messages?labelIds=SPAM&labelIds=UNREAD`;
+    const url = `https://gmail.googleapis.com/gmail/v1/users/${process.env.GMAIL_ACCOUNT}/messages?labelIds=SPAM`;
     const { token } = await oAuth2Client.getAccessToken();
     const config = generateConfig(url, token);
     const response = await axios(config);
-    await sendMailToUsers(response.data.messages);
+    // await sendMailToUsers(response.data.messages);
     res.json(response.data);
   } catch (error) {
     console.log(error);
@@ -345,6 +451,7 @@ async function readMail(messageId) {
 module.exports = {
   getUser,
   sendMail,
+  sendOneMail,
   getDrafts,
   getMessages,
   getSpamDetails,

@@ -22,5 +22,5 @@ app.use("/api", routes);
 
 app.get("/", async (req, res) => {
   // const result=await sendMail();
-  res.send("Welcome to Gmail API with NodeJS");
+  res.send("Welcome to Gmail API with Express JS");
 });
